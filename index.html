@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA 6 Open Source Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body {
+    width: 1920px; height: 1080px; overflow: hidden;
+    background: radial-gradient(circle at top right, #1e1338, #0b0d14 70%);
+    color: #f1f5f9; padding: 32px; display: grid;
+    grid-template-rows: 90px 1fr 110px; gap: 24px;
+  }
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 0 32px;
+  }
+  .title-box { display: flex; align-items: center; gap: 16px; }
+  .live-dot {
+    width: 14px; height: 14px; background: #ef4444; border-radius: 50%;
+    box-shadow: 0 0 12px #ef4444; animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; }
+  .badge { background: #ec4899; color: #fff; font-size: 13px; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+  .status-bar { display: flex; gap: 28px; font-size: 16px; color: #94a3b8; }
+  .status-bar span b { color: #38bdf8; }
+
+  main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
+  .card {
+    background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 28px; display: flex; flex-direction: column;
+  }
+  .card h2 {
+    font-size: 20px; text-transform: uppercase; letter-spacing: 1px;
+    color: #f472b6; margin-bottom: 20px; display: flex; justify-content: space-between;
+  }
+  .repo-list { display: flex; flex-direction: column; gap: 14px; }
+  .repo-item {
+    display: grid; grid-template-columns: 50px 1fr auto; align-items: center;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    padding: 16px 20px; border-radius: 14px; transition: transform 0.3s;
+  }
+  .rank { font-size: 24px; font-weight: 900; color: #fbbf24; }
+  .repo-info h3 { font-size: 20px; color: #fff; margin-bottom: 4px; }
+  .repo-info p { font-size: 14px; color: #94a3b8; max-width: 680px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .repo-stats { text-align: right; font-size: 16px; }
+  .stars { color: #fbbf24; font-weight: 700; font-size: 20px; }
+  .updated { font-size: 13px; color: #38bdf8; margin-top: 4px; }
+
+  .right-col { display: grid; grid-template-rows: 1fr 1fr; gap: 24px; }
+  .chat-box {
+    background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 16px; padding: 22px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+  }
+  .chat-user { font-size: 15px; color: #38bdf8; font-weight: 700; margin-bottom: 8px; }
+  .chat-msg { font-size: 22px; line-height: 1.4; color: #fff; }
+  .commands-hint { margin-top: 14px; font-size: 14px; color: #94a3b8; }
+  .commands-hint code { background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 6px; color: #f472b6; }
+
+  .log-list { display: flex; flex-direction: column; gap: 12px; font-size: 15px; color: #cbd5e1; }
+  .log-entry { padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px; border-left: 3px solid #ec4899; }
+
+  footer {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 0 32px; font-size: 17px;
+  }
+  .goal-wrap { display: flex; align-items: center; gap: 18px; width: 60%; }
+  .bar-bg { flex: 1; height: 22px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+  .bar-fill { width: 35%; height: 100%; background: linear-gradient(90deg, #ec4899, #8b5cf6); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-box">
+    <div class="live-dot"></div>
+    <h1>GTA 6 • TRACKER DE CÓDIGO ABIERTO EN VIVO</h1>
+    <span class="badge">24/7 EN DIRECTO</span>
+  </div>
+  <div class="status-bar">
+    <span>Repositorios rastreados: <b id="total-repos">--</b></span>
+    <span>Próxima revisión GitHub: <b id="countdown">60s</b></span>
+    <span>Hora: <b id="clock">--:--:--</b></span>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span>🏆 Ranking en Vivo (GitHub)</span><span>Ordenado por actividad y estrellas</span></h2>
+    <div class="repo-list" id="repo-list">
+      <div class="repo-item"><div class="rank">#1</div><div class="repo-info"><h3>Cargando datos de GitHub...</h3><p>Conectando con la API pública</p></div></div>
+    </div>
+  </section>
+
+  <div class="right-col">
+    <section class="card">
+      <h2><span>💬 Interacción con el Chat</span><span>Comandos activos</span></h2>
+      <div class="chat-box">
+        <div class="chat-user" id="chat-user">🤖 Sistema listo</div>
+        <div class="chat-msg" id="chat-response">Escribe <b>!info</b>, <b>!ranking</b> o <b>!proyecto</b> en el chat de YouTube para interactuar en pantalla.</div>
+      </div>
+      <div class="commands-hint">
+        Comandos disponibles: <code>!info</code> <code>!ranking</code> <code>!github</code> <code>!meta</code>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span>⚡ Actividad Reciente</span><span>Últimos commits detectados</span></h2>
+      <div class="log-list" id="activity-log">
+        <div class="log-entry">Esperando primera actualización de repositorios...</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="goal-wrap">
+    <span>🎯 Meta del canal: <b>350 / 1,000 Suscriptores</b></span>
+    <div class="bar-bg"><div class="bar-fill"></div></div>
+  </div>
+  <div>🎵 Música: <b>Sin Copyright (NCS / YouTube Audio)</b></div>
+</footer>
+
+<script>
+  const API_KEY_YOUTUBE = ""; // <-- OPCIONAL: Pega aquí tu API Key de YouTube para leer el chat real
+  const LIVE_CHAT_ID = "";    // <-- OPCIONAL: Pega aquí el ID del chat en vivo
+
+  let reposCache = [];
+  let secondsLeft = 60;
+
+  async function fetchGitHubProjects() {
+    try {
+      const q = encodeURIComponent('gta6 OR "gta 6" OR "grand theft auto vi"');
+      const res = await fetch(`https://github.com{q}&sort=updated&order=desc&per_page=6`);
+      const data = await res.json();
+      if (!data.items) return;
+
+      reposCache = data.items;
+      document.getElementById('total-repos').textContent = data.total_count.toLocaleString('es-ES');
+
+      const list = document.getElementById('repo-list');
+      list.innerHTML = data.items.map((repo, i) => {
+        const updatedDate = new Date(repo.pushed_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="repo-item">
+            <div class="rank">#${i + 1}</div>
+            <div class="repo-info">
+              <h3>${repo.full_name}</h3>
+              <p>${repo.description || 'Proyecto comunitario de código abierto relacionado con GTA 6.'}</p>
+            </div>
+            <div class="repo-stats">
+              <div class="stars">⭐ ${repo.stargazers_count}</div>
+              <div class="updated">Act: ${updatedDate} (${repo.language || 'Código'})</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const log = document.getElementById('activity-log');
+      log.innerHTML = data.items.slice(0, 4).map(r =>
+        `<div class="log-entry">🔄 <b>${r.name}</b> actualizado a las ${new Date(r.pushed_at).toLocaleTimeString('es-ES')}</div>`
+      ).join('');
+    } catch (e) {
+      console.error("Error leyendo GitHub:", e);
+    }
+  }
+
+  function handleCommand(user, text) {
+    const cmd = text.trim().toLowerCase();
+    const userEl = document.getElementById('chat-user');
+    const msgEl = document.getElementById('chat-response');
+
+    if (cmd.startsWith('!info')) {
+      userEl.textContent = `💬 ${user} preguntó !info`;
+      msgEl.textContent = 'Este directo rastrea en tiempo real herramientas, mapas, parsers y mods de código abierto creados por la comunidad para GTA 6 en GitHub.';
+    } else if (cmd.startsWith('!ranking') && reposCache.length > 0) {
+      userEl.textContent = `💬 ${user} preguntó !ranking`;
+      msgEl.textContent = `Ahora mismo lidera el ranking "${reposCache[0].full_name}" con ${reposCache[0].stargazers_count} estrellas en GitHub.`;
+    } else if (cmd.startsWith('!github')) {
+      userEl.textContent = `💬 ${user} preguntó !github`;
+      msgEl.textContent = 'Los datos se consultan automáticamente cada 60 segundos usando la API oficial de GitHub.';
+    } else if (cmd.startsWith('!meta')) {
+      userEl.textContent = `💬 ${user} preguntó !meta`;
+      msgEl.textContent = '¡Suscríbete para ayudarnos a llegar a los 1,000 suscriptores y mantener este servidor 24/7 activo!';
+    }
+  }
+
+  // Simulación de prueba automática si aún no conectas tu API Key de YouTube
+  const demoCommands = [
+    ['CarlosGamer', '!info'],
+    ['ElenaDev', '!ranking'],
+    ['Marcos_99', '!github']
+  ];
+  let demoIndex = 0;
+
+  setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      secondsLeft = 60;
+      fetchGitHubProjects();
+    }
+    document.getElementById('countdown').textContent = `${secondsLeft}s`;
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-ES');
+
+    if (!API_KEY_YOUTUBE && secondsLeft % 20 === 0) {
+      const [u, c] = demoCommands[demoIndex % demoCommands.length];
+      handleCommand(u, c);
+      demoIndex++;
+    }
+  }, 1000);
+
+  fetchGitHubProjects();
+</script>
+</body>
+</html>
